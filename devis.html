@@ -234,53 +234,55 @@
 </footer>
 
 <script>
-document.getElementById('devis-form').addEventListener('submit', function(e) {
+document.getElementById('devis-form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const f = this;
+  const btn = f.querySelector('.submit-btn');
 
-  const nom        = f.nom.value;
-  const email      = f.email.value;
-  const tel        = f.telephone.value;
-  const ville      = f.ville.value;
-  const metier     = f.metier.value;
-  const siteEx     = f.site_existant.value || 'Non renseigné';
-  const reseaux    = f.reseaux.value || 'Aucun';
-  const formule    = f.formule.value;
-  const budget     = f.budget.value + ' €';
-  const deadline   = f.deadline.value || 'Non renseigné';
-  const message    = f.message.value;
+  // État chargement
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Envoi en cours…';
 
-  const sujet = encodeURIComponent('Demande de devis – ' + metier + ' – ' + ville);
+  const data = {
+    nom:           f.nom.value,
+    email:         f.email.value,
+    telephone:     f.telephone.value,
+    ville:         f.ville.value,
+    metier:        f.metier.value,
+    site_existant: f.site_existant.value || 'Non renseigné',
+    reseaux:       f.reseaux.value || 'Aucun',
+    formule:       f.formule.value,
+    budget:        f.budget.value + ' €',
+    deadline:      f.deadline.value || 'Non renseigné',
+    message:       f.message.value,
+    _subject:      'Demande de devis – ' + f.metier.value + ' – ' + f.ville.value,
+    _replyto:      f.email.value,
+  };
 
-  const corps = encodeURIComponent(
-    '=== DEMANDE DE DEVIS STUDIO AVEL ===\n\n' +
-    '--- COORDONNÉES ---\n' +
-    'Nom : ' + nom + '\n' +
-    'Email : ' + email + '\n' +
-    'Téléphone : ' + tel + '\n' +
-    'Ville : ' + ville + '\n' +
-    'Métier : ' + metier + '\n\n' +
-    '--- PRÉSENCE EN LIGNE ---\n' +
-    'Site existant : ' + siteEx + '\n' +
-    'Réseaux sociaux : ' + reseaux + '\n\n' +
-    '--- PROJET ---\n' +
-    'Formule souhaitée : ' + formule + '\n' +
-    'Budget estimé : ' + budget + '\n' +
-    'Délai souhaité : ' + deadline + '\n\n' +
-    '--- DESCRIPTION DU PROJET ---\n' +
-    message + '\n\n' +
-    '=====================================\n' +
-    'Envoyé depuis studioavel.fr'
-  );
+  try {
+    const res = await fetch('https://formspree.io/f/xlgyzave', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
 
-  window.location.href = 'mailto:studio.avel@protonmail.com?subject=' + sujet + '&body=' + corps;
-
-  // Afficher le message de succès
-  document.getElementById('devis-form').style.display = 'none';
-  document.getElementById('success-msg').style.display = 'block';
-  window.scrollTo({top: 0, behavior: 'smooth'});
+    if (res.ok) {
+      document.getElementById('devis-form').style.display = 'none';
+      document.getElementById('success-msg').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      throw new Error('Formspree error');
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg> Envoyer ma demande';
+    alert('Une erreur est survenue. Veuillez réessayer ou me contacter directement à studio.avel@protonmail.com');
+  }
 });
 </script>
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
 
 </body>
 </html>
